@@ -27,7 +27,7 @@ int Textures::preLoadedIdx[TN_COUNT];
 const wchar_t *Textures::preLoaded[TN_COUNT] =
 {
 	L"%blur%misc/pumpkinblur",
-//	L"%blur%/misc/vignette",		// Not currently used
+	L"%blur%/misc/vignette",		// Not currently used
 	L"%clamp%misc/shadow",
 //	L"/achievement/bg",				// Not currently used
 	L"art/kz",

@@ -308,7 +308,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse)
 		RenderManager.StateSetBlendFactor(0xffffff |(((unsigned int)fVal)<<24));
 		currentGuiBlendFactor = fVal / 255.0f;
 	//	RenderManager.StateSetBlendFactor(0x40ffffff);
-		glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
 		blitOffset = -90;
 
@@ -346,7 +346,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse)
 			MemSect(0);
 			glEnable(GL_BLEND);
 			RenderManager.StateSetBlendFactor(0xffffff |(((unsigned int)fVal)<<24));
-			glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+			glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 			//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 			// 4J Stu - We don't want to adjust the cursor by the safezone, we want it centred
 			if(bTwoPlayerSplitscreen)
@@ -389,7 +389,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse)
 		{
 			// 4J - added blend for fading gui
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
+			glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
 			if (minecraft->gameMode->canHurtPlayer())
 			{
@@ -1052,7 +1052,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse)
 
 	lastTickA = a;
 	// 4J Stu - This is now displayed in a xui scene
-#if 0
+
 	// Jukebox CD message
     if (overlayMessageTime > 0)
 	{
@@ -1085,7 +1085,6 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse)
             glPopMatrix();
         }
     }
-#endif
 
     unsigned int max = 10;
     bool isChatting = false;
@@ -1275,7 +1274,6 @@ void Gui::renderVignette(float br, int w, int h)
     if (br > 1) br = 1;
     tbr += (br - tbr) * 0.01f;
 
-#if 0  // 4J - removed - TODO put back when we have blend functions implemented
     glDisable(GL_DEPTH_TEST);
     glDepthMask(false);
     glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
@@ -1292,7 +1290,6 @@ void Gui::renderVignette(float br, int w, int h)
     glEnable(GL_DEPTH_TEST);
     glColor4f(1, 1, 1, 1);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
 }
 
 void Gui::renderTp(float br, int w, int h)
