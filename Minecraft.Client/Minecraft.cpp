@@ -2384,7 +2384,10 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 				}
 				int heldItemId = (heldItem != nullptr) ? heldItem->getItem()->id : -1;
 
-				bool holdingTorch = (heldItemId == Tile::torch_Id);
+				bool holdingTorch = (heldItemId >= 0)              // что-то держим
+					&& (heldItemId < 256)              // это тайл, не предмет
+					&& (Tile::tiles[heldItemId] != nullptr)  // тайл существует
+					&& (Tile::lightEmission[heldItemId] > 0); // он светится
 
 				// Текущая позиция игрока (целочисленная)
 				int curX = Mth::floor(player->x);
