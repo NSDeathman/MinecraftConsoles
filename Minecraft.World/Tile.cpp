@@ -818,8 +818,13 @@ Icon *Tile::getTexture(int face)
 AABB *Tile::getTileAABB(Level *level, int x, int y, int z)
 {
 	ThreadStorage *tls = static_cast<ThreadStorage *>(TlsGetValue(Tile::tlsIdxShape));
+	if (tls == nullptr)
+		return AABB::newTemp(x, y, z, x, y, z);
+
 	// 4J Stu - Added this so that the TLS shape is correct for this tile
-	if(tls->tileId != this->id) updateDefaultShape();
+	if(tls->tileId != this->id) 
+		updateDefaultShape();
+
 	return AABB::newTemp(x + tls->xx0, y + tls->yy0, z + tls->zz0, x + tls->xx1, y + tls->yy1, z + tls->zz1);
 }
 
@@ -832,8 +837,14 @@ void Tile::addAABBs(Level *level, int x, int y, int z, AABB *box, AABBList *boxe
 AABB *Tile::getAABB(Level *level, int x, int y, int z)
 {
 	ThreadStorage *tls = static_cast<ThreadStorage *>(TlsGetValue(Tile::tlsIdxShape));
+
+	if (tls == nullptr)
+		return AABB::newTemp(x, y, z, x, y, z);
+
 	// 4J Stu - Added this so that the TLS shape is correct for this tile
-	if(tls->tileId != this->id) updateDefaultShape();
+	if(tls->tileId != this->id) 
+		updateDefaultShape();
+
 	return AABB::newTemp(x + tls->xx0, y + tls->yy0, z + tls->zz0, x + tls->xx1, y + tls->yy1, z + tls->zz1);
 }
 
