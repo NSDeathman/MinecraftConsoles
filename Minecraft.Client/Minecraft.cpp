@@ -2351,84 +2351,73 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 		{
 			//            setScreen(new InBedChatScreen());		// 4J - TODO put back in
 		}
-		// === Динамический свет от факела ===
+		// === Динамический свет от светящегося блока в руке ===
 		{
-			// Статические переменные для хранения последней позиции блока света
-			// (по одной на каждого возможного игрока)
-			static int lastLightX[XUSER_MAX_COUNT];
-			static int lastLightY[XUSER_MAX_COUNT];
-			static int lastLightZ[XUSER_MAX_COUNT];
+			static int  lastLightX[XUSER_MAX_COUNT];
+			static int  lastLightY[XUSER_MAX_COUNT];
+			static int  lastLightZ[XUSER_MAX_COUNT];
 			static bool lightPlaced[XUSER_MAX_COUNT];
-
-			// Инициализация при первом вызове
+			static int  lastHeldItemId[XUSER_MAX_COUNT];
 			static bool initialized = false;
 			if (!initialized)
 			{
 				for (int i = 0; i < XUSER_MAX_COUNT; i++)
 				{
-					lastLightX[i] = 0;
-					lastLightY[i] = 0;
-					lastLightZ[i] = 0;
+					lastLightX[i] = lastLightY[i] = lastLightZ[i] = 0;
 					lightPlaced[i] = false;
+					lastHeldItemId[i] = -1;
 				}
 				initialized = true;
 			}
 
 			if (player != nullptr && level != nullptr)
 			{
-				// Проверяем что держит игрок
 				shared_ptr<ItemInstance> heldItem = nullptr;
 				if (player->inventory->IsHeldItem())
-				{
 					heldItem = player->inventory->getSelected();
-				}
 				int heldItemId = (heldItem != nullptr) ? heldItem->getItem()->id : -1;
 
-				bool holdingTorch = (heldItemId >= 0)              // что-то держим
-					&& (heldItemId < 256)              // это тайл, не предмет
-					&& (Tile::tiles[heldItemId] != nullptr)  // тайл существует
-					&& (Tile::lightEmission[heldItemId] > 0); // он светится
+				bool holdingLight = (heldItemId >= 0)
+					&& (heldItemId < 256)
+					&& (Tile::tiles[heldItemId] != nullptr)
+					&& (Tile::lightEmission[heldItemId] > 0);
 
-				// Текущая позиция игрока (целочисленная)
+				// Предмет в руке сменился — убираем старый блок света
+				bool itemChanged = (heldItemId != lastHeldItemId[iPad]);
+				if (itemChanged && lightPlaced[iPad])
+				{
+					int ox = lastLightX[iPad], oy = lastLightY[iPad], oz = lastLightZ[iPad];
+					if (level->getTile(ox, oy, oz) == Tile::lightSourceBlock_Id)
+						level->setTileAndData(ox, oy, oz, 0, 0, Tile::UPDATE_CLIENTS);
+					lightPlaced[iPad] = false;
+				}
+				lastHeldItemId[iPad] = heldItemId;
+
 				int curX = Mth::floor(player->x);
 				int curY = Mth::floor(player->y);
 				int curZ = Mth::floor(player->z);
 
-				if (holdingTorch)
+				if (holdingLight)
 				{
-					bool positionChanged =
-						(curX != lastLightX[iPad]) ||
+					// Игрок переместился — убираем старый блок
+					bool positionChanged = (curX != lastLightX[iPad]) ||
 						(curY != lastLightY[iPad]) ||
 						(curZ != lastLightZ[iPad]);
-
-					// Удаляем старый блок света если игрок переместился
 					if (lightPlaced[iPad] && positionChanged)
 					{
-						int ox = lastLightX[iPad];
-						int oy = lastLightY[iPad];
-						int oz = lastLightZ[iPad];
-
+						int ox = lastLightX[iPad], oy = lastLightY[iPad], oz = lastLightZ[iPad];
 						if (level->getTile(ox, oy, oz) == Tile::lightSourceBlock_Id)
-						{
 							level->setTileAndData(ox, oy, oz, 0, 0, Tile::UPDATE_CLIENTS);
-						}
 						lightPlaced[iPad] = false;
 					}
 
-					// Ставим новый блок света если его ещё нет
 					if (!lightPlaced[iPad])
 					{
-						// Ставим на позицию ног игрока только если клетка свободна
 						if (level->isEmptyTile(curX, curY, curZ))
 						{
-							float emission = Tile::lightEmission[heldItemId];
-							Tile::lightEmission[Tile::lightSourceBlock_Id] = emission;
-
-							level->setTileAndData(
-								curX, curY, curZ,
-								Tile::lightSourceBlock_Id, 0,
-								Tile::UPDATE_CLIENTS
-							);
+							Tile::lightEmission[Tile::lightSourceBlock_Id] = Tile::lightEmission[heldItemId];
+							level->setTileAndData(curX, curY, curZ,
+								Tile::lightSourceBlock_Id, 0, Tile::UPDATE_CLIENTS);
 							lastLightX[iPad] = curX;
 							lastLightY[iPad] = curY;
 							lastLightZ[iPad] = curZ;
@@ -2438,17 +2427,12 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures)
 				}
 				else
 				{
-					// Игрок убрал факел — удаляем блок света
+					// Не держим светящийся блок — убираем свет
 					if (lightPlaced[iPad])
 					{
-						int ox = lastLightX[iPad];
-						int oy = lastLightY[iPad];
-						int oz = lastLightZ[iPad];
-
+						int ox = lastLightX[iPad], oy = lastLightY[iPad], oz = lastLightZ[iPad];
 						if (level->getTile(ox, oy, oz) == Tile::lightSourceBlock_Id)
-						{
 							level->setTileAndData(ox, oy, oz, 0, 0, Tile::UPDATE_CLIENTS);
-						}
 						lightPlaced[iPad] = false;
 					}
 				}
